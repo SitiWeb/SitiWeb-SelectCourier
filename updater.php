@@ -123,8 +123,8 @@ class SitiWeb_Updater {
 				$plugin = array(
 					'name'				=> $this->plugin["Name"],
 					'slug'				=> $this->basename,
-					'requires'					=> '3.3',
-					'tested'						=> '4.4.1',
+					'requires'					=> '5.1',
+					'tested'						=> '6.4.3',
 					'rating'						=> '100.0',
 					'num_ratings'				=> '10823',
 					'downloaded'				=> '14249',
