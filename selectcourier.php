@@ -4,7 +4,7 @@
  * Description: Maatwerk Select courier voor profmbroadcast.nl
  * Version: 1.0
  * Author: Roberto van SitiWeb
- * Author URI: http://yourwebsite.com/
+ * Author URI: https://sitiweb.nl/
  */
 
 add_action('plugins_loaded', 'load_plugins', 0);
