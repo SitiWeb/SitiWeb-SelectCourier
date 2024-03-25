@@ -2,10 +2,18 @@
 /**
  * Plugin Name: Maatwerk Select courier
  * Description: Maatwerk Select courier voor profmbroadcast.nl
- * Version: 1.0
+ * Version: 1.1
  * Author: Roberto van SitiWeb
  * Author URI: https://sitiweb.nl/
  */
+if( ! class_exists( 'SitiWeb_Updater' ) ){
+	include_once( plugin_dir_path( __FILE__ ) . 'updater.php' );
+}
+
+$updater = new SitiWeb_Updater( __FILE__ );
+$updater->set_username( 'SitiWeb' );
+$updater->set_repository( 'SitiWeb-SelectCourier' );
+$updater->initialize();
 
 add_action('plugins_loaded', 'load_plugins', 0);
 function load_plugins() {
