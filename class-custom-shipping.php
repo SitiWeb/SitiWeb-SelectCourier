@@ -69,11 +69,11 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
             }
         } else {
             // If no shipping options are available, you can handle it accordingly
-            $this->add_rate( array(
-                'id'    => $this->id . '_no_option',
-                'label' => 'No shipping options available',
-                'cost'  => 0,
-            ) );
+            // $this->add_rate( array(
+            //     'id'    => $this->id . '_no_option',
+            //     'label' => 'No shipping options available',
+            //     'cost'  => 0,
+            // ) );
         }
 
    
