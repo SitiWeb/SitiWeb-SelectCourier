@@ -69,6 +69,17 @@ function shipping_options_fields() {
             'desc' => '',
             'id' => 'shipping_options_title'
         ),
+        'selectcourier_auth_method' => array(
+            'name' => __('Authentication Method', 'woocommerce'),
+            'type' => 'select',
+            'desc' => __('Select the authentication method', 'woocommerce'),
+            'id' => 'selectcourier_auth_method',
+            'options' => array(
+                
+                'api_key_secret' => __('API Key & Secret (Recommended)', 'woocommerce'),
+                'username_password' => __('Username & Password (Not Recommended)', 'woocommerce'),
+            )
+        ),
         'selectcourier_environment' => array(
             'name' => __('Selectcourier Environment', 'woocommerce'),
             'type' => 'select',
@@ -83,19 +94,29 @@ function shipping_options_fields() {
             'name' => __('Username', 'woocommerce'),
             'type' => 'text',
             'desc' => __('Enter the username', 'woocommerce'),
-            'id' => 'selectcourier_username'
+            'id' => 'selectcourier_username',
+            'class' => 'selectcourier-auth-username-password' // Add a class for conditional logic
         ),
         'selectcourier_password' => array(
             'name' => __('Password', 'woocommerce'),
             'type' => 'password',
             'desc' => __('Enter the password', 'woocommerce'),
-            'id' => 'selectcourier_password'
+            'id' => 'selectcourier_password',
+            'class' => 'selectcourier-auth-username-password' // Add a class for conditional logic
         ),
-        'selectcourier_username' => array(
-            'name' => __('Username', 'woocommerce'),
+        'selectcourier_api_key' => array(
+            'name' => __('API Key', 'woocommerce'),
             'type' => 'text',
-            'desc' => __('Enter the username', 'woocommerce'),
-            'id' => 'selectcourier_username'
+            'desc' => __('Enter the API key', 'woocommerce'),
+            'id' => 'selectcourier_api_key',
+            'class' => 'selectcourier-auth-api-key-secret' // Add a class for conditional logic
+        ),
+        'selectcourier_api_secret' => array(
+            'name' => __('API Secret', 'woocommerce'),
+            'type' => 'password',
+            'desc' => __('Enter the API secret', 'woocommerce'),
+            'id' => 'selectcourier_api_secret',
+            'class' => 'selectcourier-auth-api-key-secret' // Add a class for conditional logic
         ),
         'shipping_options_section_end' => array(
             'type' => 'sectionend',
@@ -103,9 +124,41 @@ function shipping_options_fields() {
         )
     );
     return $fields;
+    
 }
 
+add_action('admin_head','sw_admin_head_selectcourier');
+function sw_admin_head_selectcourier(){
+    ?>
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    function toggleAuthFields() {
+        // Get the selected authentication method
+        var authMethod = $('#selectcourier_auth_method').val();
 
+        // Hide all fields initially
+        $('.selectcourier-auth-username-password').closest('tr').hide();
+        $('.selectcourier-auth-api-key-secret').closest('tr').hide();
+
+        // Show fields based on the selected authentication method
+        if (authMethod === 'username_password') {
+            $('.selectcourier-auth-username-password').closest('tr').show();
+        } else if (authMethod === 'api_key_secret') {
+            $('.selectcourier-auth-api-key-secret').closest('tr').show();
+        }
+    }
+
+    // Run on page load
+    toggleAuthFields();
+
+    // Run on authentication method change
+    $('#selectcourier_auth_method').change(function() {
+        toggleAuthFields();
+    });
+});
+</script>
+    <?php
+}
 
 // Define fields for the origin address section
 function origin_address_fields() {

@@ -35,7 +35,7 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
                 'title'         => __( 'Method Title' ),
                 'type'             => 'text',
                 'description'     => __( 'This controls the title which the user sees during checkout.' ),
-                'default'        => __( 'Tyche Shipping Method' ),
+                'default'        => __( 'SitiWeb SelectCourier Method' ),
                 'desc_tip'        => true
             )
         );
@@ -132,7 +132,7 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
         // Include all necessary details required for the API request
         // Construct the API request
         $shipping_address = WC()->customer->get_shipping();
-      
+        $auth_method = get_option('selectcourier_auth_method','api_key_secret');
         $items = array();
 
         $default_country = get_option('woocommerce_default_country');
@@ -206,6 +206,9 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
         $username = get_option('selectcourier_username', false);
         $password = get_option('selectcourier_password', false);
 
+        $api_key = get_option('selectcourier_api_key', false);
+        $api_secret = get_option('selectcourier_api_secret', false);
+
         $name = get_option('selectcourier_origin_name',false);
         $phone = get_option('selectcourier_origin_phone', false);
         $email = get_option('selectcourier_origin_email',  get_option('admin_email', false));
@@ -216,8 +219,9 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
         
         
 
-        if (!$username || !$password){
+        if ((!$username || !$password) && (!$api_key ||! $api_secret)){
             error_log('SelectCourier: Missing password or username');
+            error_log('SelectCourier: Missing api key or secret');
             return false;
         }
         
@@ -256,32 +260,38 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
             return false;
         }
 
+        // Initialize the request array with common elements
         $request = array(
-            "environment"   => $environment,
-            "username"      => $username,
-            "password"      => $password,
-            "action"        => "quote",
-            "shipment"      => array(
-                "o_name"        => $name,
-                "o_phone"       => $phone,
-                "o_email"       => $email,
-                "o_street_1"    => $street,
-                "o_postal"      => $postcode,
-                "o_city"        => $city,
-                "o_country"     => $country,
-                "d_name"        => "Recipient",
-                "d_phone"       => $phone,
-                "d_street_1"    => $shipping_address['address_1'],
-                "d_postal"      => $shipping_address['postcode'],
-                "d_city"        => $shipping_address['city'],
-                "d_country"     => $shipping_address['country'],
-                "type"          => "parcel",
-                "contents"      => "Radio Equipment",
-                "value"         => "parcel",
-                "return_service"=> 0,
-                "items"         => $items // Include items in the shipment
+            "environment" => $environment,
+            "action"      => "quote",
+            "shipment"    => array(
+                "o_name"         => $name,
+                "o_phone"        => $phone,
+                "o_email"        => $email,
+                "o_street_1"     => $street,
+                "o_postal"       => $postcode,
+                "o_city"         => $city,
+                "o_country"      => $country,
+                "d_name"         => "Recipient",
+                "d_phone"        => $phone,
+                "d_street_1"     => $shipping_address['address_1'],
+                "d_postal"       => $shipping_address['postcode'],
+                "d_city"         => $shipping_address['city'],
+                "d_country"      => $shipping_address['country'],
+                "type"           => "parcel",
+                "contents"       => "Radio Equipment",
+                "value"          => "parcel",
+                "return_service" => 0,
+                "items"          => $items // Include items in the shipment
             )
         );
+
+        // Adjust the request array based on the selected authentication method
+        if ($auth_method == 'username_password') {
+            // Add username and password to the request for username/password authentication
+            $request['username'] = $username;
+            $request['password'] = $password;
+        }
         error_log(print_r($request,1));
         return $request;
     }
@@ -290,7 +300,7 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
         
         // Start time
         $start_time = microtime(true);
-
+        $auth_method = get_option('selectcourier_auth_method','api_key_secret');
         // Make the API request using cURL
         $url = "https://www.selectcourier.com/api/json";
         $ch = curl_init();
@@ -300,7 +310,19 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($request));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        if ($auth_method == 'api_key_secret') {
+            $api_key = get_option('selectcourier_api_key', false);
+            $api_secret = get_option('selectcourier_api_secret', false);
+            // Assume you have $api_key and $api_secret variables set from your settings]
+
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                "Authorization: Basic " . base64_encode($api_key . ":" .  $api_secret)
+           ));
+
+          
+        }
         $response = curl_exec($ch);
+     
         curl_close($ch);
         // End time
         $end_time = microtime(true);
