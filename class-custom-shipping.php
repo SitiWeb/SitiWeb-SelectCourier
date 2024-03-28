@@ -343,11 +343,37 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
         if (isset($response["result"]["services"])) {
             foreach ($response["result"]["services"] as $method) {
                 if (!empty($method["courier_name"])) {
+                
+                    $method_name = $method["courier_name"]. ' ' . $method['service_name'];
+                    
                     $shipping_options[] = array(
-                        'id'    => $method["service_id"],
-                        'name'  => $method["courier_name"]. ' ' . $method['service_name'],
-                        'price' => $method["total_price"]
+                        'id'    => $method["service_keycode"],
+                        'name'  => $method_name,
+                        'price' => $method["total_price"],
+                        
                     );
+                    if (true && isset($method[ 'courier_logo' ])){
+                      
+                        $shipping_options[] = array(
+                            'id'    => $method["service_keycode"],
+                            'name'  => $method_name,
+                            'price' => $method["total_price"], 
+                          //  'meta_data' => $metadata // Include metadata field
+                            
+                        );
+                        $methods = new SitiWeb_SelectCourier_methods();
+                        $methods->set_method_in_db($method);
+                        //$this->add_meta_data('method_logo',$method["courier_logo"]);
+                    }
+                    else{
+                        $shipping_options[] = array(
+                            'id'    => $method["service_keycode"],
+                            'name'  => $method_name,
+                            'price' => $method["total_price"],
+                            
+                        );
+                    }
+                   
                 }
             }
         }

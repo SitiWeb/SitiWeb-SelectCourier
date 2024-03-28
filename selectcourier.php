@@ -20,6 +20,9 @@ function load_plugins() {
     // Check if WooCommerce is active and the WC_Shipping_Method class exists
     if ( class_exists( 'WC_Shipping_Method' ) ) {
         require_once( plugin_dir_path( __FILE__ ) . 'class-custom-shipping.php' );
+        require_once( plugin_dir_path( __FILE__ ) . 'class-select-methods.php' );
+
+
     } else {
         // Optionally, handle the case where WooCommerce is not active
         // For example, you could deactivate your plugin or display a notice
@@ -62,6 +65,7 @@ function shipping_options_tab() {
 
 // Define fields for the custom tab
 function shipping_options_fields() {
+
     $fields = array(
         'shipping_options_title' => array(
             'name' => __('Selectcourier opties', 'woocommerce'),
@@ -118,6 +122,7 @@ function shipping_options_fields() {
             'id' => 'selectcourier_api_secret',
             'class' => 'selectcourier-auth-api-key-secret' // Add a class for conditional logic
         ),
+       
         'shipping_options_section_end' => array(
             'type' => 'sectionend',
             'id' => 'shipping_options_section_end'
@@ -225,4 +230,17 @@ add_action('woocommerce_update_options', 'save_shipping_options');
 function save_shipping_options() {
     woocommerce_update_options(shipping_options_fields());
     woocommerce_update_options(origin_address_fields()); // Save origin address fields
+}
+
+add_filter( 'woocommerce_cart_shipping_method_full_label', 'filter_woocommerce_cart_shipping_method_full_label', 10, 2 ); 
+
+function filter_woocommerce_cart_shipping_method_full_label( $label, $method ) {  
+    $methods = new SitiWeb_SelectCourier_methods();
+    $image = $methods->get_method_image($method);
+    if ($image){
+        $label = '<img style="width:40px;margin-right:10px;" src="data:image/jpeg;base64, '.$image.'" /> '.$label;
+    }
+  
+
+   return $label; 
 }
