@@ -11,6 +11,7 @@
  * @author         Roberto van SitiWeb
  */
 class WC_Shipping_SelectCourier extends WC_Shipping_Method {
+    private static $calculate_shipping_executed = false;
 
     /**
      * Constructor. The instance ID is passed to this.
@@ -19,7 +20,7 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
         $this->id                    = 'select_courier';
         $this->instance_id           = absint( $instance_id );
         $this->method_title          = __( 'select_courier Method' );
-        $this->method_description    = __( 'select_courier method for demonstration purposes.' );
+        $this->method_description    = __( 'select_courier method.' );
         $this->supports              = array(
             'shipping-zones',
             'instance-settings',
@@ -55,6 +56,12 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
     * @param array $package (default: array())
     */
     public function calculate_shipping( $package = array() ) {
+        // Check if calculate_shipping has already been executed
+        if (self::$calculate_shipping_executed) {
+            // If yes, return early to avoid executing the function again
+           // return;
+        }
+  
         $options = $this->get_shipping_options();
 
         // Check if shipping options are available
@@ -67,14 +74,9 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
                     'cost'  => $option['price'], // Shipping cost for the option
                 ) );
             }
-        } else {
-            // If no shipping options are available, you can handle it accordingly
-            // $this->add_rate( array(
-            //     'id'    => $this->id . '_no_option',
-            //     'label' => 'No shipping options available',
-            //     'cost'  => 0,
-            // ) );
         }
+        // Mark calculate_shipping as executed to prevent future executions in the same request/operation
+        self::$calculate_shipping_executed = true;
 
    
     }
@@ -85,12 +87,15 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
 
         // Construct the API request data
         $request_data = $this->construct_api_request_data();
+        $post_request_data = $request_data;
+        unset($post_request_data['shipment']['reference']);
 
         // Generate a hash of the request data
-        $request_hash = md5(serialize($request_data));
+        $request_hash = md5(serialize($post_request_data));
 
         // Check if the cached result exists
         $cached_result = get_transient('select_courier_shipping_options_' . $request_hash);
+        error_log( 'Cached: '.print_r($cached_result,1) );
 
         if ($cached_result !== false) {
             // End time
@@ -111,7 +116,7 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
             $shipping_options = $this->process_api_response($response);
 
             // Cache the shipping options with the hashed key
-            set_transient('select_courier_shipping_options_' . $request_hash, $shipping_options, HOUR_IN_SECONDS); // Cache for 1 hour
+            set_transient('select_courier_shipping_options_' . $request_hash, $post_request_data, HOUR_IN_SECONDS); // Cache for 1 hour
 
             // End time
             $end_time = microtime(true);
@@ -216,7 +221,8 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
         $postcode = get_option('selectcourier_origin_postal', get_option('woocommerce_store_postcode', false));
         $city = get_option('selectcourier_origin_city',  get_option('woocommerce_store_city', false));
 
-        
+        $reference = get_option('selectcourier_reference',0);
+        update_option('selectcourier_reference', $reference + 1);
         
 
         if ((!$username || !$password) && (!$api_key ||! $api_secret)){
@@ -278,6 +284,7 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
                 "d_postal"       => $shipping_address['postcode'],
                 "d_city"         => $shipping_address['city'],
                 "d_country"      => $shipping_address['country'],
+                "reference"      => $reference,
                 "type"           => "parcel",
                 "contents"       => "Radio Equipment",
                 "value"          => "parcel",
@@ -352,26 +359,9 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
                         'price' => $method["total_price"],
                         
                     );
-                    if (true && isset($method[ 'courier_logo' ])){
-                      
-                        $shipping_options[] = array(
-                            'id'    => $method["service_keycode"],
-                            'name'  => $method_name,
-                            'price' => $method["total_price"], 
-                          //  'meta_data' => $metadata // Include metadata field
-                            
-                        );
+                    if (isset($method[ 'courier_logo' ])){
                         $methods = new SitiWeb_SelectCourier_methods();
                         $methods->set_method_in_db($method);
-                        //$this->add_meta_data('method_logo',$method["courier_logo"]);
-                    }
-                    else{
-                        $shipping_options[] = array(
-                            'id'    => $method["service_keycode"],
-                            'name'  => $method_name,
-                            'price' => $method["total_price"],
-                            
-                        );
                     }
                    
                 }

@@ -54,7 +54,5 @@ class SitiWeb_SelectCourier_methods{
                 update_option($this->method_field_name, $methods);
             }
         }
-
-
     }
 }
