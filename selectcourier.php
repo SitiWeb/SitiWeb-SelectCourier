@@ -30,7 +30,7 @@ function load_plugins() {
 function my_custom_plugin_admin_notice() {
     ?>
     <div class="notice notice-warning">
-        <p><?php _e( 'My Custom Plugin requires WooCommerce to be installed and active.', 'my-custom-plugin-text-domain' ); ?></p>
+        <p><?php _e( 'Maatwerk Select courier requires WooCommerce to be installed and active.', 'my-custom-plugin-text-domain' ); ?></p>
     </div>
     <?php
 }
