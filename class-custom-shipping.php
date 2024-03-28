@@ -63,11 +63,16 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
         }
   
         $options = $this->get_shipping_options();
-
+        // var_dump($options);
+        // wp_die();
         // Check if shipping options are available
         if (!empty($options)) {
             foreach ($options as $option) {
+                if (!is_array($option)){
+                    continue;
+                }
                 // Add rate for each shipping option
+                
                 $this->add_rate( array(
                     'id'    => $this->id . '_' . $option['id'], // Unique ID for the rate
                     'label' => $option['name'], // Displayed label for the rate
@@ -88,6 +93,7 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
         // Construct the API request data
         $request_data = $this->construct_api_request_data();
         $post_request_data = $request_data;
+        $reference = $post_request_data['shipment']['reference'];
         unset($post_request_data['shipment']['reference']);
 
         // Generate a hash of the request data
@@ -114,9 +120,10 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
 
             // Process the API response and extract shipping options
             $shipping_options = $this->process_api_response($response);
+            update_option('selectcourier_reference', $reference + 1);
 
             // Cache the shipping options with the hashed key
-            set_transient('select_courier_shipping_options_' . $request_hash, $post_request_data, HOUR_IN_SECONDS); // Cache for 1 hour
+            set_transient('select_courier_shipping_options_' . $request_hash, $shipping_options, HOUR_IN_SECONDS); // Cache for 1 hour
 
             // End time
             $end_time = microtime(true);
@@ -222,7 +229,11 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
         $city = get_option('selectcourier_origin_city',  get_option('woocommerce_store_city', false));
 
         $reference = get_option('selectcourier_reference',0);
-        update_option('selectcourier_reference', $reference + 1);
+    
+        
+        (WC()->session->set( 'select_courier_shipping_data', $reference ));
+       
+        
         
 
         if ((!$username || !$password) && (!$api_key ||! $api_secret)){
@@ -300,6 +311,7 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
             $request['password'] = $password;
         }
         error_log(print_r($request,1));
+        
         return $request;
     }
 

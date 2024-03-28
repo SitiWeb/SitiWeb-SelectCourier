@@ -244,3 +244,59 @@ function filter_woocommerce_cart_shipping_method_full_label( $label, $method ) {
 
    return $label; 
 }
+
+function save_shipping_meta_to_order( $order, $data ) {
+    $shipping_data = WC()->session->get( 'select_courier_shipping_data');
+    if ($shipping_data)  {
+        $order->update_meta_data( '_select_courier_shipping_data', $shipping_data );
+        WC()->session->__unset( 'select_courier_shipping_data' ); // Clear the session data
+    }
+}
+add_action( 'woocommerce_checkout_create_order', 'save_shipping_meta_to_order', 10, 2 );
+
+add_action( 'woocommerce_order_status_changed', 'action_after_order_processed', 10, 4 );
+
+function action_after_order_processed( $order_id, $from, $to, $order ) {
+
+    $shipping_data = WC()->session->get( 'select_courier_shipping_data');
+    
+    if ($shipping_data)  {
+        update_post_meta($order_id,'_select_courier_shipping_data',$shipping_data);
+    }
+    // Perform your actions here
+}
+
+
+
+function display_shipping_meta_in_admin_order( $order ) {
+    if (!is_admin()){
+        return;
+    }
+    $shipping_data =(get_post_meta($order->get_id(),'_select_courier_shipping_data',true));
+    if ( ! empty( $shipping_data ) ) {
+        echo '<p><strong>Select Courier reference:</strong> ' . esc_html( $shipping_data ) . '</p>';
+    }
+}
+add_action( 'woocommerce_admin_order_data_after_shipping_address', 'display_shipping_meta_in_admin_order', 10, 1 );
+
+
+
+add_filter('woocommerce_rest_prepare_shop_order_object', 'custom_modify_order_response_for_specific_ip', 10, 3);
+
+function custom_modify_order_response_for_specific_ip($response, $order, $request) {
+    // Check if the X-Real-IP header matches the specified IP address
+    $target_ip = '2001:9a8:1ad:0:87:233:77:121';
+    if (isset($_SERVER['HTTP_X_REAL_IP']) && $_SERVER['HTTP_X_REAL_IP'] === $target_ip) {
+        // Assuming you want to modify the order number
+        // Here, we're setting it to a static value ('123') for demonstration purposes
+        // You might want to retrieve this value or generate it based on your specific requirements
+        $custom_order_number = get_post_meta($order->get_id(), '_select_courier_shipping_data', true);
+        
+        if (!empty($custom_order_number)) {
+            // Modify the response data
+            $response->data['order_number'] = $custom_order_number;
+        }
+    }
+
+    return $response;
+}
