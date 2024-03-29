@@ -63,8 +63,7 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
         }
   
         $options = $this->get_shipping_options();
-        // var_dump($options);
-        // wp_die();
+    
         // Check if shipping options are available
         if (!empty($options)) {
             foreach ($options as $option) {
@@ -213,7 +212,7 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
             
         );
         $items[] = $item;
-
+    
         $environment = get_option('selectcourier_environment','development');
         $username = get_option('selectcourier_username', false);
         $password = get_option('selectcourier_password', false);
