@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Maatwerk Select courier
  * Description: Maatwerk Select courier voor profmbroadcast.nl
- * Version: 1.5.2
+ * Version: 1.5.3
  * Author: Roberto van SitiWeb
  * Author URI: https://sitiweb.nl/
  */
@@ -38,8 +38,6 @@ function my_custom_plugin_admin_notice() {
     <?php
 }
 
-add_filter('woocommerce_shipping_methods', array('WC_Shipping_SelectCourier','woocommerce_shipping_methods' ));
-
 add_filter( 'woocommerce_shipping_methods', 'register_select_courier' );
 
 function register_select_courier( $methods ) {
@@ -60,18 +58,18 @@ function add_shipping_options_tab($tabs) {
 // Add fields to the custom tab
 add_action('woocommerce_settings_tabs_shipping_options', 'shipping_options_tab');
 function shipping_options_tab() {
-    woocommerce_admin_fields(array_merge(shipping_options_fields(), origin_address_fields()));
+    woocommerce_admin_fields(select_shipping_options_fields());
 }
 
 // Define fields for the custom tab
-function shipping_options_fields() {
+function select_shipping_options_fields() {
 
     $fields = array(
-        'shipping_options_title' => array(
+        'selectcourier_options_title' => array(
             'name' => __('Selectcourier opties', 'woocommerce'),
             'type' => 'title',
             'desc' => '',
-            'id' => 'shipping_options_title'
+            'id' => 'selectcourier_options_title'
         ),
         'selectcourier_auth_method' => array(
             'name' => __('Authentication Method', 'woocommerce'),
@@ -126,48 +124,7 @@ function shipping_options_fields() {
         'shipping_options_section_end' => array(
             'type' => 'sectionend',
             'id' => 'shipping_options_section_end'
-        )
-    );
-    return $fields;
-    
-}
-
-add_action('admin_head','sw_admin_head_selectcourier');
-function sw_admin_head_selectcourier(){
-    ?>
-<script type="text/javascript">
-jQuery(document).ready(function($) {
-    function toggleAuthFields() {
-        // Get the selected authentication method
-        var authMethod = $('#selectcourier_auth_method').val();
-
-        // Hide all fields initially
-        $('.selectcourier-auth-username-password').closest('tr').hide();
-        $('.selectcourier-auth-api-key-secret').closest('tr').hide();
-
-        // Show fields based on the selected authentication method
-        if (authMethod === 'username_password') {
-            $('.selectcourier-auth-username-password').closest('tr').show();
-        } else if (authMethod === 'api_key_secret') {
-            $('.selectcourier-auth-api-key-secret').closest('tr').show();
-        }
-    }
-
-    // Run on page load
-    toggleAuthFields();
-
-    // Run on authentication method change
-    $('#selectcourier_auth_method').change(function() {
-        toggleAuthFields();
-    });
-});
-</script>
-    <?php
-}
-
-// Define fields for the origin address section
-function origin_address_fields() {
-    $fields = array(
+        ),
         'origin_address_title' => array(
             'name' => __('Origin Address', 'woocommerce'),
             'type' => 'title',
@@ -224,12 +181,49 @@ function origin_address_fields() {
         )
     );
     return $fields;
+    
 }
 
-add_action('woocommerce_update_options', 'save_shipping_options');
-function save_shipping_options() {
-    woocommerce_update_options(shipping_options_fields());
-    woocommerce_update_options(origin_address_fields()); // Save origin address fields
+add_action('admin_head','sw_admin_head_selectcourier');
+function sw_admin_head_selectcourier(){
+    ?>
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    function toggleAuthFields() {
+        // Get the selected authentication method
+        var authMethod = $('#selectcourier_auth_method').val();
+
+        // Hide all fields initially
+        $('.selectcourier-auth-username-password').closest('tr').hide();
+        $('.selectcourier-auth-api-key-secret').closest('tr').hide();
+
+        // Show fields based on the selected authentication method
+        if (authMethod === 'username_password') {
+            $('.selectcourier-auth-username-password').closest('tr').show();
+        } else if (authMethod === 'api_key_secret') {
+            $('.selectcourier-auth-api-key-secret').closest('tr').show();
+        }
+    }
+
+    // Run on page load
+    toggleAuthFields();
+
+    // Run on authentication method change
+    $('#selectcourier_auth_method').change(function() {
+        toggleAuthFields();
+    });
+});
+</script>
+    <?php
+}
+
+
+
+add_action('woocommerce_update_options', 'save_select_shipping_options',9999999999);
+function save_select_shipping_options() {
+    if(isset($_GET['shipping_options'])){
+        woocommerce_update_options(select_shipping_options_fields());
+    }
 }
 
 add_filter( 'woocommerce_cart_shipping_method_full_label', 'filter_woocommerce_cart_shipping_method_full_label', 10, 2 ); 
