@@ -219,7 +219,7 @@ jQuery(document).ready(function($) {
 
 
 
-add_action('woocommerce_update_options', 'save_select_shipping_options',9999999999);
+add_action('woocommerce_update_options', 'save_select_shipping_options', 100);
 function save_select_shipping_options() {
     if(isset($_POST['selectcourier_origin_country'])){
         woocommerce_update_options(select_shipping_options_fields());
