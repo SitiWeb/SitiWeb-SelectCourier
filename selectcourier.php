@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Maatwerk Select courier
  * Description: Maatwerk Select courier voor profmbroadcast.nl
- * Version: 1.5.4
+ * Version: 1.5.5
  * Author: Roberto van SitiWeb
  * Author URI: https://sitiweb.nl/
  */
@@ -251,13 +251,15 @@ add_action( 'woocommerce_checkout_create_order', 'save_shipping_meta_to_order', 
 add_action( 'woocommerce_order_status_changed', 'action_after_order_processed', 10, 4 );
 
 function action_after_order_processed( $order_id, $from, $to, $order ) {
-
-    $shipping_data = WC()->session->get( 'select_courier_shipping_data');
-    
-    if ($shipping_data)  {
-        update_post_meta($order_id,'_select_courier_shipping_data',$shipping_data);
+    if (WC()->session) {
+        $shipping_data = WC()->session->get('select_courier_shipping_data');
+        
+        if ($shipping_data) {
+            update_post_meta($order_id,'_select_courier_shipping_data',$shipping_data);
+        }
+    } else {
+        error_log('WooCommerce session is not available.');
     }
-    // Perform your actions here
 }
 
 
