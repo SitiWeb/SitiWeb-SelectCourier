@@ -320,7 +320,7 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
         $start_time = microtime(true);
         $auth_method = get_option('selectcourier_auth_method','api_key_secret');
         // Make the API request using cURL
-        $url = "https://www.selectcourier.com/api/json";
+        $url = "https://portal.selectcourier.com/api/json";
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
