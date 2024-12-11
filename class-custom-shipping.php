@@ -295,7 +295,7 @@ class WC_Shipping_SelectCourier extends WC_Shipping_Method {
                 "d_city"         => $shipping_address['city'],
                 "d_country"      => $shipping_address['country'],
                 "reference"      => $reference,
-                "type"           => "parcel",
+                "type"           => "Parcel",
                 "contents"       => "Radio Equipment",
                 "value"          => "parcel",
                 "return_service" => 0,
